@@ -1,0 +1,139 @@
+<div class="dashboard">
+  <h2>Welcome to AtlasFlight Dashboard</h2>
+  <p class="subtitle">Your aviation analytics platform</p>
+
+  <!-- Stats Grid - Non-clickable (just display) -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-number">14,110</div>
+      <div class="stat-label">✈️ Airports</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">21,317</div>
+      <div class="stat-label">🏢 Airlines</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">67,663</div>
+      <div class="stat-label">🗺️ Routes</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">261</div>
+      <div class="stat-label">🌍 Countries</div>
+    </div>
+  </div>
+
+  <!-- Charts Section - 3 Charts in One Row -->
+  <div class="charts-grid-three">
+    <!-- Chart 1: Top Airlines -->
+    <div class="chart-card">
+      <h3>✈️ Top Airlines</h3>
+      <div class="bar-chart">
+        <div class="bar-item" *ngFor="let airline of topAirlines">
+          <div class="bar-label">{{ airline.name }}</div>
+          <div class="bar-track">
+            <div class="bar-fill"
+                 [style.width.%]="(airline.value / getMaxValue(topAirlines)) * 100">
+              <span class="bar-value">{{ airline.value }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart 2: Aircraft Distribution -->
+    <div class="chart-card">
+      <h3>🛩️ Aircraft Types</h3>
+      <div class="bar-chart">
+        <div class="bar-item" *ngFor="let aircraft of aircraftDistribution">
+          <div class="bar-label">{{ aircraft.name }}</div>
+          <div class="bar-track">
+            <div class="bar-fill aircraft-bar"
+                 [style.width.%]="(aircraft.value / getMaxValue(aircraftDistribution)) * 100">
+              <span class="bar-value">{{ aircraft.value }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart 3: Route Types -->
+    <div class="chart-card">
+      <h3>📊 Route Types</h3>
+      <div class="pie-chart-container">
+        <div class="pie-chart">
+          <svg viewBox="0 0 120 120" class="pie-svg">
+            <circle cx="60" cy="60" r="50" fill="#f0f0f0" />
+            <circle cx="60" cy="60" r="50"
+                    fill="none"
+                    stroke="#1976d2"
+                    stroke-width="20"
+                    stroke-dasharray="213.6 100.4"
+                    stroke-dashoffset="0"
+                    transform="rotate(-90 60 60)" />
+            <circle cx="60" cy="60" r="50"
+                    fill="none"
+                    stroke="#ff6f00"
+                    stroke-width="20"
+                    stroke-dasharray="72.3 241.7"
+                    stroke-dashoffset="-213.6"
+                    transform="rotate(-90 60 60)" />
+            <circle cx="60" cy="60" r="50"
+                    fill="none"
+                    stroke="#4caf50"
+                    stroke-width="20"
+                    stroke-dasharray="28.3 285.7"
+                    stroke-dashoffset="-285.9"
+                    transform="rotate(-90 60 60)" />
+          </svg>
+          <div class="pie-center-text">
+            <span class="pie-total">67,663</span>
+            <span class="pie-total-label">Total Routes</span>
+          </div>
+        </div>
+        <div class="pie-legend">
+          <div class="legend-item">
+            <span class="legend-color" style="background:#1976d2"></span>
+            <span class="legend-label">Direct Routes (68%)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background:#ff6f00"></span>
+            <span class="legend-label">1 Stop (23%)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background:#4caf50"></span>
+            <span class="legend-label">2+ Stops (9%)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features Grid - 5 items matching header -->
+  <div class="features-grid-five">
+    <div class="feature-card" (click)="goToAirports()">
+      <div class="feature-icon">✈️</div>
+      <h3>Airports</h3>
+      <p>Explore 14,000+ airports</p>
+    </div>
+    <div class="feature-card" (click)="goToAirlines()">
+      <div class="feature-icon">🏢</div>
+      <h3>Airlines</h3>
+      <p>Global airline fleet info</p>
+    </div>
+    <div class="feature-card" (click)="goToRoutes()">
+      <div class="feature-icon">🗺️</div>
+      <h3>Routes</h3>
+      <p>Flight routes worldwide</p>
+    </div>
+    <div class="feature-card" (click)="goToFleet()">
+      <div class="feature-icon">🛩️</div>
+      <h3>Fleet</h3>
+      <p>Aircraft type analytics</p>
+    </div>
+    <div class="feature-card" (click)="goToRouteFinder()">
+      <div class="feature-icon">🔍</div>
+      <h3>Find Routes</h3>
+      <p>Search flights between airports</p>
+    </div>
+  </div>
+</div>

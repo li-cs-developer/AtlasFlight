@@ -1,0 +1,18 @@
+<div class="airlines-container">
+  <h2>🏢 Airlines</h2>
+  <p class="subtitle">Global airlines and their fleet information</p>
+
+  <div class="airlines-grid">
+    <div class="airline-card" *ngFor="let airline of airlines">
+      <div class="airline-header">
+        <h3>{{ airline.name }}</h3>
+        <span class="iata-badge">{{ airline.iata }}</span>
+      </div>
+      <div class="airline-details">
+        <p><strong>🌍 Country:</strong> {{ airline.country }}</p>
+        <p><strong>✈️ Fleet Size:</strong> {{ airline.fleet }}</p>
+        <p><strong>Status:</strong> <span class="active-badge">Active ✅</span></p>
+      </div>
+    </div>
+  </div>
+</div>

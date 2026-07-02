@@ -1,0 +1,55 @@
+<div class="route-finder">
+  <h2>✈️ Route Finder</h2>
+  <p class="subtitle">Find flights between any two airports</p>
+
+  <div class="search-box">
+    <div class="input-group">
+      <label>From</label>
+      <select [(ngModel)]="fromAirport">
+        <option value="">Select departure airport</option>
+        <option *ngFor="let airport of airports" [value]="airport.code">
+          {{ airport.name }} ({{ airport.code }})
+        </option>
+      </select>
+    </div>
+
+    <div class="input-group">
+      <label>To</label>
+      <select [(ngModel)]="toAirport">
+        <option value="">Select destination airport</option>
+        <option *ngFor="let airport of airports" [value]="airport.code">
+          {{ airport.name }} ({{ airport.code }})
+        </option>
+      </select>
+    </div>
+
+    <button (click)="findRoutes()" class="search-btn">🔍 Find Routes</button>
+  </div>
+
+  <div *ngIf="searched" class="results">
+    <div class="results-header">
+      <h3>Results: {{ fromAirport }} → {{ toAirport }}</h3>
+      <span class="results-count">{{ results.length }} flights found</span>
+    </div>
+
+    <div class="route-card" *ngFor="let route of results; let i = index">
+      <div class="route-rank">#{{ i + 1 }}</div>
+      <div class="route-info">
+        <div class="route-airline">{{ route.airline }}</div>
+        <div class="route-flight">{{ route.flightNumber }}</div>
+        <div class="route-stops">
+          <span class="stop-badge" [class]="getStopClass(route.stops)">
+            {{ getStopText(route.stops) }}
+          </span>
+        </div>
+        <div class="route-duration">⏱️ {{ route.duration }}</div>
+        <div class="route-price">{{ route.price }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="searched && results.length === 0" class="no-results">
+    <h3>No routes found</h3>
+    <p>Please select both departure and destination airports</p>
+  </div>
+</div>

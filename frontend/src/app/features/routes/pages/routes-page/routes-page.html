@@ -1,0 +1,31 @@
+<div class="routes-container">
+  <h2>🗺️ Routes</h2>
+  <p class="subtitle">Explore global flight routes</p>
+
+  <div class="routes-table-container">
+    <table class="routes-table">
+      <thead>
+        <tr>
+          <th>From</th>
+          <th>To</th>
+          <th>Airline</th>
+          <th>Stops</th>
+          <th>Distance</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let route of routes">
+          <td><span class="airport-code">{{ route.from }}</span></td>
+          <td><span class="airport-code">{{ route.to }}</span></td>
+          <td>{{ route.airline }}</td>
+          <td>
+            <span class="stops-badge" [class.direct]="route.stops === 0">
+              {{ route.stops === 0 ? 'Direct ✈️' : route.stops + ' stop' + (route.stops > 1 ? 's' : '') }}
+            </span>
+          </td>
+          <td>{{ route.distance }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

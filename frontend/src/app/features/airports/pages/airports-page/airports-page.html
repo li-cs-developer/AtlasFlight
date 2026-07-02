@@ -1,0 +1,66 @@
+<div class="airports-container">
+  <h2>✈️ Airport Explorer</h2>
+  <p class="subtitle">Search and explore airports worldwide</p>
+
+  <!-- Search and Filter -->
+  <div class="filters">
+    <div class="search-box">
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        (input)="filterAirports()"
+        placeholder="Search by name, IATA, ICAO, or city..."
+        class="search-input"
+      />
+      <span class="search-icon">🔍</span>
+    </div>
+
+    <div class="filter-group">
+      <select
+        [(ngModel)]="selectedCountry"
+        (change)="filterAirports()"
+        class="filter-select"
+      >
+        <option value="">All Countries</option>
+        <option *ngFor="let country of countries" [value]="country">
+          {{ country }}
+        </option>
+      </select>
+      <button (click)="clearFilters()" class="clear-btn">Clear Filters</button>
+    </div>
+  </div>
+
+  <!-- Results Count -->
+  <div class="results-count">
+    Showing {{ filteredAirports.length }} of {{ airports.length }} airports
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading">
+    Loading airports...
+  </div>
+
+  <!-- Airport Grid -->
+  <div class="airports-grid" *ngIf="!loading">
+    <div class="airport-card" *ngFor="let airport of filteredAirports">
+      <div class="airport-header">
+        <h3>{{ airport.name }}</h3>
+        <span class="iata-badge">{{ airport.iata_code }}</span>
+      </div>
+      <div class="airport-details">
+        <p><strong>📍 City:</strong> {{ airport.city }}</p>
+        <p><strong>🌍 Country:</strong> {{ airport.country }}</p>
+        <p><strong>🛫 ICAO:</strong> {{ airport.icao_code }}</p>
+        <p><strong>📍 Coordinates:</strong> {{ airport.latitude | number:'1.4-4' }}, {{ airport.longitude | number:'1.4-4' }}</p>
+        <p *ngIf="airport.altitude"><strong>📏 Altitude:</strong> {{ airport.altitude }} ft</p>
+        <p><strong>🕐 Time Zone:</strong> {{ airport.time_zone }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Results -->
+  <div *ngIf="!loading && filteredAirports.length === 0" class="no-results">
+    <h3>No airports found</h3>
+    <p>Try adjusting your search filters</p>
+  </div>
+</div>

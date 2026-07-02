@@ -1,0 +1,32 @@
+<div class="fleet-container">
+  <h2>🛩️ Fleet Analytics</h2>
+  <p class="subtitle">Aircraft types and fleet statistics</p>
+
+  <div class="stats-summary">
+    <div class="stat-item">
+      <div class="stat-number">{{ aircraftTypes.length }}</div>
+      <div class="stat-label">Aircraft Types</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">{{ getTotalAircraft() }}</div>
+      <div class="stat-label">Total Aircraft</div>
+    </div>
+  </div>
+
+  <div class="fleet-grid">
+    <div class="fleet-card" *ngFor="let type of aircraftTypes">
+      <div class="fleet-header">
+        <h3>{{ type.name }}</h3>
+        <span class="icao-badge">{{ type.icao }}</span>
+      </div>
+      <div class="fleet-details">
+        <p><strong>✈️ Total:</strong> {{ type.count | number }}</p>
+        <p><strong>🏢 Airlines:</strong> {{ type.airlines }}</p>
+        <p><strong>📏 Range:</strong> {{ type.range }}</p>
+      </div>
+      <div class="fleet-bar">
+        <div class="bar-fill" [style.width.%]="getPercentage(type.count)"></div>
+      </div>
+    </div>
+  </div>
+</div>
