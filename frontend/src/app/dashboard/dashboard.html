@@ -2,32 +2,35 @@
   <h2>Welcome to AtlasFlight Dashboard</h2>
   <p class="subtitle">Your aviation analytics platform</p>
 
-  <!-- Stats Grid - Non-clickable (just display) -->
+  <!-- Stats Grid -->
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-number">14,110</div>
+      <div class="stat-number">{{ stats.total_airports | number }}</div>
       <div class="stat-label">✈️ Airports</div>
     </div>
     <div class="stat-card">
-      <div class="stat-number">21,317</div>
+      <div class="stat-number">{{ stats.total_airlines | number }}</div>
       <div class="stat-label">🏢 Airlines</div>
     </div>
     <div class="stat-card">
-      <div class="stat-number">67,663</div>
+      <div class="stat-number">{{ stats.total_routes | number }}</div>
       <div class="stat-label">🗺️ Routes</div>
     </div>
     <div class="stat-card">
-      <div class="stat-number">261</div>
+      <div class="stat-number">{{ stats.total_countries | number }}</div>
       <div class="stat-label">🌍 Countries</div>
     </div>
   </div>
 
-  <!-- Charts Section - 3 Charts in One Row -->
+  <!-- Charts Section -->
   <div class="charts-grid-three">
     <!-- Chart 1: Top Airlines -->
     <div class="chart-card">
-      <h3>✈️ Top Airlines</h3>
+      <h3>✈️ Top Airlines by Routes</h3>
       <div class="bar-chart">
+        <div *ngIf="topAirlines.length === 0" class="no-data">
+          Loading airline data...
+        </div>
         <div class="bar-item" *ngFor="let airline of topAirlines">
           <div class="bar-label">{{ airline.name }}</div>
           <div class="bar-track">
@@ -44,12 +47,15 @@
     <div class="chart-card">
       <h3>🛩️ Aircraft Types</h3>
       <div class="bar-chart">
+        <div *ngIf="aircraftDistribution.length === 0" class="no-data">
+          Loading aircraft data...
+        </div>
         <div class="bar-item" *ngFor="let aircraft of aircraftDistribution">
           <div class="bar-label">{{ aircraft.name }}</div>
           <div class="bar-track">
             <div class="bar-fill aircraft-bar"
                  [style.width.%]="(aircraft.value / getMaxValue(aircraftDistribution)) * 100">
-              <span class="bar-value">{{ aircraft.value }}</span>
+              <span class="bar-value">{{ aircraft.value | number }}</span>
             </div>
           </div>
         </div>
@@ -59,71 +65,83 @@
     <!-- Chart 3: Route Types -->
     <div class="chart-card">
       <h3>📊 Route Types</h3>
-      <div class="pie-chart-container">
+      <div *ngIf="!hasRouteStats()" class="no-data">
+        Loading route data...
+      </div>
+      <div *ngIf="hasRouteStats()" class="pie-chart-container">
         <div class="pie-chart">
           <svg viewBox="0 0 120 120" class="pie-svg">
             <circle cx="60" cy="60" r="50" fill="#f0f0f0" />
+            <!-- Direct Routes -->
             <circle cx="60" cy="60" r="50"
                     fill="none"
                     stroke="#1976d2"
                     stroke-width="20"
-                    stroke-dasharray="213.6 100.4"
+                    [attr.stroke-dasharray]="(routeStats[0]?.pct || 0) * 3.14 + ' ' + (100 - (routeStats[0]?.pct || 0)) * 3.14"
                     stroke-dashoffset="0"
                     transform="rotate(-90 60 60)" />
+            <!-- 1 Stop -->
             <circle cx="60" cy="60" r="50"
                     fill="none"
                     stroke="#ff6f00"
                     stroke-width="20"
-                    stroke-dasharray="72.3 241.7"
-                    stroke-dashoffset="-213.6"
+                    [attr.stroke-dasharray]="(routeStats[1]?.pct || 0) * 3.14 + ' ' + (100 - (routeStats[1]?.pct || 0)) * 3.14"
+                    [attr.stroke-dashoffset]="-(routeStats[0]?.pct || 0) * 3.14"
                     transform="rotate(-90 60 60)" />
+            <!-- 2+ Stops -->
             <circle cx="60" cy="60" r="50"
                     fill="none"
                     stroke="#4caf50"
                     stroke-width="20"
-                    stroke-dasharray="28.3 285.7"
-                    stroke-dashoffset="-285.9"
+                    [attr.stroke-dasharray]="(routeStats[2]?.pct || 0) * 3.14 + ' ' + (100 - (routeStats[2]?.pct || 0)) * 3.14"
+                    [attr.stroke-dashoffset]="-((routeStats[0]?.pct || 0) + (routeStats[1]?.pct || 0)) * 3.14"
                     transform="rotate(-90 60 60)" />
           </svg>
           <div class="pie-center-text">
-            <span class="pie-total">67,663</span>
+            <span class="pie-total">{{ stats.total_routes | number }}</span>
             <span class="pie-total-label">Total Routes</span>
           </div>
         </div>
         <div class="pie-legend">
           <div class="legend-item">
             <span class="legend-color" style="background:#1976d2"></span>
-            <span class="legend-label">Direct Routes (68%)</span>
+            <span class="legend-label">Direct Routes</span>
+            <span class="legend-value">{{ routeStats[0]?.value | number:'1.2-2' }}%</span>
+            <span class="legend-count">({{ routeStats[0]?.count | number }})</span>
           </div>
           <div class="legend-item">
             <span class="legend-color" style="background:#ff6f00"></span>
-            <span class="legend-label">1 Stop (23%)</span>
+            <span class="legend-label">1 Stop</span>
+            <span class="legend-value">{{ routeStats[1]?.value | number:'1.2-2' }}%</span>
+            <span class="legend-count">({{ routeStats[1]?.count | number }})</span>
           </div>
           <div class="legend-item">
             <span class="legend-color" style="background:#4caf50"></span>
-            <span class="legend-label">2+ Stops (9%)</span>
+            <span class="legend-label">2+ Stops</span>
+            <span class="legend-value">{{ routeStats[2]?.value | number:'1.2-2' }}%</span>
+            <span class="legend-count">({{ routeStats[2]?.count | number }})</span>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Features Grid - 5 items matching header -->
+  <!-- Features Grid -->
   <div class="features-grid-five">
     <div class="feature-card" (click)="goToAirports()">
       <div class="feature-icon">✈️</div>
       <h3>Airports</h3>
-      <p>Explore 14,000+ airports</p>
+      <p>Explore {{ stats.total_airports | number }}+ airports</p>
     </div>
     <div class="feature-card" (click)="goToAirlines()">
       <div class="feature-icon">🏢</div>
       <h3>Airlines</h3>
-      <p>Global airline fleet info</p>
+      <p>{{ stats.total_airlines | number }} global airlines</p>
     </div>
     <div class="feature-card" (click)="goToRoutes()">
       <div class="feature-icon">🗺️</div>
       <h3>Routes</h3>
-      <p>Flight routes worldwide</p>
+      <p>{{ stats.total_routes | number }} flight routes</p>
     </div>
     <div class="feature-card" (click)="goToFleet()">
       <div class="feature-icon">🛩️</div>

@@ -22,8 +22,8 @@
         class="filter-select"
       >
         <option value="">All Countries</option>
-        <option *ngFor="let country of countries" [value]="country">
-          {{ country }}
+        <option *ngFor="let country of countries" [value]="country.iso_code">
+          {{ country.name }}
         </option>
       </select>
       <button (click)="clearFilters()" class="clear-btn">Clear Filters</button>
@@ -32,31 +32,45 @@
 
   <!-- Results Count -->
   <div class="results-count">
-    Showing {{ filteredAirports.length }} of {{ airports.length }} airports
+    <span *ngIf="!searchPerformed && !searchQuery && !selectedCountry">
+      Loading <strong>{{ filteredAirports.length }}</strong> airports
+      <span *ngIf="total > 0">out of <strong>{{ total }}</strong></span>
+    </span>
+    <span *ngIf="searchPerformed || searchQuery || selectedCountry">
+      Found <strong>{{ filteredAirports.length }}</strong> matching airports
+      <span *ngIf="total > 0">out of <strong>{{ total }}</strong></span>
+    </span>
+    <span *ngIf="!loading && !loadedAll" class="loading-badge">⏳ Loading more...</span>
   </div>
 
   <!-- Loading State -->
-  <div *ngIf="loading" class="loading">
+  <div *ngIf="loading && filteredAirports.length === 0" class="loading">
     Loading airports...
   </div>
 
-  <!-- Airport Grid -->
-  <div class="airports-grid" *ngIf="!loading">
-    <div class="airport-card" *ngFor="let airport of filteredAirports">
-      <div class="airport-header">
-        <h3>{{ airport.name }}</h3>
-        <span class="iata-badge">{{ airport.iata_code }}</span>
-      </div>
-      <div class="airport-details">
-        <p><strong>📍 City:</strong> {{ airport.city }}</p>
-        <p><strong>🌍 Country:</strong> {{ airport.country }}</p>
-        <p><strong>🛫 ICAO:</strong> {{ airport.icao_code }}</p>
-        <p><strong>📍 Coordinates:</strong> {{ airport.latitude | number:'1.4-4' }}, {{ airport.longitude | number:'1.4-4' }}</p>
-        <p *ngIf="airport.altitude"><strong>📏 Altitude:</strong> {{ airport.altitude }} ft</p>
-        <p><strong>🕐 Time Zone:</strong> {{ airport.time_zone }}</p>
+  <!-- Virtual Scroll Grid - Using Rows of 3 -->
+  <cdk-virtual-scroll-viewport
+    *ngIf="!loading && filteredAirports.length > 0"
+    [itemSize]="itemHeight"
+    [minBufferPx]="itemHeight * 3"
+    [maxBufferPx]="itemHeight * 5"
+    class="viewport">
+
+    <div *cdkVirtualFor="let row of airportsRows" class="airports-row">
+      <div *ngFor="let airport of row" class="airport-card">
+        <div class="airport-header">
+          <h3>{{ airport.name }}</h3>
+          <span class="iata-badge">{{ airport.iata_code }}</span>
+        </div>
+        <div class="airport-details">
+          <p><strong>📍 City:</strong> {{ airport.city }}</p>
+          <p><strong>🌍 Country:</strong> {{ airport.country }}</p>
+          <p><strong>🛫 ICAO:</strong> {{ airport.icao_code }}</p>
+          <p *ngIf="airport.altitude"><strong>📏 Altitude:</strong> {{ airport.altitude }} ft</p>
+        </div>
       </div>
     </div>
-  </div>
+  </cdk-virtual-scroll-viewport>
 
   <!-- No Results -->
   <div *ngIf="!loading && filteredAirports.length === 0" class="no-results">

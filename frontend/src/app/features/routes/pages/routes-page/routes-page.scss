@@ -4,9 +4,135 @@
   padding: 20px;
 }
 
+h2 {
+  margin: 0 0 4px 0;
+  color: #1a1a1a;
+}
+
 .subtitle {
   color: #666;
-  margin-bottom: 24px;
+  margin: 0 0 24px 0;
+}
+
+/* Filters */
+.filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+}
+
+.search-label {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.search-input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 16px 10px 38px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+  outline: none;
+  background: white;
+}
+
+.search-input:focus {
+  border-color: #1976d2;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  opacity: 0.6;
+  font-size: 0.9rem;
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: #999;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.clear-search-btn:hover {
+  color: #333;
+}
+
+.clear-btn {
+  padding: 10px 24px;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s;
+  white-space: nowrap;
+  height: 42px;
+  align-self: flex-end;
+}
+
+.clear-btn:hover {
+  background: #d32f2f;
+}
+
+.results-count {
+  color: #666;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+}
+
+.results-count strong {
+  color: #1a1a1a;
+}
+
+.loading-badge {
+  display: inline-block;
+  background: #fff3e0;
+  color: #e65100;
+  padding: 2px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  margin-left: 12px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.loading {
+  text-align: center;
+  padding: 60px 0;
+  color: #666;
+  font-size: 1.2rem;
+}
+
+/* Virtual Scroll Viewport */
+.viewport {
+  height: 600px;
+  width: 100%;
+  overflow-y: auto;
 }
 
 .routes-table-container {
@@ -21,6 +147,12 @@
   border-collapse: collapse;
 }
 
+.routes-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
 .routes-table th {
   background: #f5f7fa;
   padding: 16px;
@@ -31,8 +163,9 @@
 }
 
 .routes-table td {
-  padding: 16px;
+  padding: 12px 16px;
   border-bottom: 1px solid #f0f0f0;
+  height: 56px;
 }
 
 .routes-table tr:hover {
@@ -50,6 +183,13 @@
   padding: 2px 10px;
   border-radius: 4px;
   font-size: 0.9rem;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.airport-name {
+  color: #666;
+  font-size: 0.85rem;
 }
 
 .stops-badge {
@@ -58,6 +198,7 @@
   border-radius: 4px;
   font-size: 0.9rem;
   color: #e65100;
+  display: inline-block;
 }
 
 .stops-badge.direct {
@@ -65,17 +206,62 @@
   color: #2e7d32;
 }
 
+.stops-badge.one-stop {
+  background: #fff8e1;
+  color: #f57f17;
+}
+
+.no-results {
+  text-align: center;
+  padding: 60px 0;
+  color: #666;
+}
+
+.no-results h3 {
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.no-results p {
+  margin: 0;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .routes-table-container {
-    overflow-x: auto;
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    min-width: auto;
+  }
+
+  .clear-btn {
+    width: 100%;
+  }
+
+  .viewport {
+    height: 400px;
   }
 
   .routes-table {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 
   .routes-table th,
   .routes-table td {
-    padding: 12px 8px;
+    padding: 10px 8px;
+  }
+
+  .airport-code {
+    font-size: 0.8rem;
+    padding: 2px 6px;
+  }
+
+  .airport-name {
+    font-size: 0.75rem;
+    display: block;
+    margin-top: 2px;
   }
 }

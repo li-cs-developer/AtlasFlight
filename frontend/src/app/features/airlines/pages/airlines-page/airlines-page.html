@@ -2,17 +2,82 @@
   <h2>🏢 Airlines</h2>
   <p class="subtitle">Global airlines and their fleet information</p>
 
-  <div class="airlines-grid">
-    <div class="airline-card" *ngFor="let airline of airlines">
-      <div class="airline-header">
-        <h3>{{ airline.name }}</h3>
-        <span class="iata-badge">{{ airline.iata }}</span>
-      </div>
-      <div class="airline-details">
-        <p><strong>🌍 Country:</strong> {{ airline.country }}</p>
-        <p><strong>✈️ Fleet Size:</strong> {{ airline.fleet }}</p>
-        <p><strong>Status:</strong> <span class="active-badge">Active ✅</span></p>
+  <!-- Search and Filter -->
+  <div class="filters">
+    <div class="search-box">
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        (input)="filterAirlines()"
+        placeholder="Search by airline name, IATA, or ICAO..."
+        class="search-input"
+      />
+      <span class="search-icon">🔍</span>
+    </div>
+
+    <div class="filter-group">
+      <select
+        [(ngModel)]="selectedCountry"
+        (change)="filterAirlines()"
+        class="filter-select"
+      >
+        <option value="">All Countries</option>
+        <option *ngFor="let country of countries" [value]="country.name">
+          {{ country.name }}
+        </option>
+      </select>
+      <button (click)="clearFilters()" class="clear-btn">Clear Filters</button>
+    </div>
+  </div>
+
+  <!-- Results Count -->
+  <div class="results-count" *ngIf="!loading || filteredAirlines.length > 0">
+    <span *ngIf="!searchPerformed && !searchQuery && !selectedCountry">
+      Loading <strong>{{ filteredAirlines.length }}</strong> airlines
+      <span *ngIf="total > 0">out of <strong>{{ total }}</strong></span>
+    </span>
+    <span *ngIf="searchPerformed || searchQuery || selectedCountry">
+      Found <strong>{{ filteredAirlines.length }}</strong> matching airlines
+      <span *ngIf="total > 0">out of <strong>{{ total }}</strong></span>
+    </span>
+    <span *ngIf="!loading && !loadedAll" class="loading-badge">⏳ Loading more...</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading && filteredAirlines.length === 0" class="loading">
+    Loading airlines...
+  </div>
+
+  <!-- Virtual Scroll Grid - Using Rows of 3 -->
+  <cdk-virtual-scroll-viewport
+    *ngIf="!loading && filteredAirlines.length > 0"
+    [itemSize]="itemHeight"
+    [minBufferPx]="itemHeight * 3"
+    [maxBufferPx]="itemHeight * 5"
+    class="viewport">
+
+    <div *cdkVirtualFor="let row of airlinesRows" class="airlines-row">
+      <div *ngFor="let airline of row" class="airline-card">
+        <div class="airline-header">
+          <h3>{{ airline.name }}</h3>
+          <span class="iata-badge">{{ airline.iata_code || 'N/A' }}</span>
+        </div>
+        <div class="airline-details">
+          <p><strong>🌍 Country:</strong> {{ airline.country_name || 'Unknown' }}</p>
+          <p><strong>✈️ ICAO:</strong> {{ airline.icao_code || 'N/A' }}</p>
+          <p><strong>Status:</strong>
+            <span class="active-badge" [class.inactive]="airline.active !== 'Y'">
+              {{ airline.active === 'Y' ? 'Active ✅' : 'Inactive ❌' }}
+            </span>
+          </p>
+        </div>
       </div>
     </div>
+  </cdk-virtual-scroll-viewport>
+
+  <!-- No Results -->
+  <div *ngIf="!loading && filteredAirlines.length === 0" class="no-results">
+    <h3>No airlines found</h3>
+    <p>Try adjusting your search filters</p>
   </div>
 </div>

@@ -2,30 +2,97 @@
   <h2>🗺️ Routes</h2>
   <p class="subtitle">Explore global flight routes</p>
 
-  <div class="routes-table-container">
-    <table class="routes-table">
-      <thead>
-        <tr>
-          <th>From</th>
-          <th>To</th>
-          <th>Airline</th>
-          <th>Stops</th>
-          <th>Distance</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let route of routes">
-          <td><span class="airport-code">{{ route.from }}</span></td>
-          <td><span class="airport-code">{{ route.to }}</span></td>
-          <td>{{ route.airline }}</td>
-          <td>
-            <span class="stops-badge" [class.direct]="route.stops === 0">
-              {{ route.stops === 0 ? 'Direct ✈️' : route.stops + ' stop' + (route.stops > 1 ? 's' : '') }}
-            </span>
-          </td>
-          <td>{{ route.distance }}</td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- Search Filters -->
+  <div class="filters">
+    <div class="search-box">
+      <span class="search-label">From</span>
+      <input
+        type="text"
+        [(ngModel)]="fromSearch"
+        (input)="filterRoutes()"
+        placeholder="City or airport code..."
+        class="search-input"
+      />
+      <span class="search-icon">🛫</span>
+      <button *ngIf="fromSearch" (click)="clearFromSearch()" class="clear-search-btn">✕</button>
+    </div>
+
+    <div class="search-box">
+      <span class="search-label">To</span>
+      <input
+        type="text"
+        [(ngModel)]="toSearch"
+        (input)="filterRoutes()"
+        placeholder="City or airport code..."
+        class="search-input"
+      />
+      <span class="search-icon">🛬</span>
+      <button *ngIf="toSearch" (click)="clearToSearch()" class="clear-search-btn">✕</button>
+    </div>
+
+    <button (click)="clearAllFilters()" class="clear-btn">Clear All</button>
+  </div>
+
+  <!-- Results Count -->
+  <div class="results-count">
+    <span *ngIf="!searchPerformed && !fromSearch && !toSearch">
+      Loading <strong>{{ filteredRoutes.length }}</strong> routes
+      <span *ngIf="total > 0">out of <strong>{{ total }}</strong></span>
+    </span>
+    <span *ngIf="searchPerformed || fromSearch || toSearch">
+      Found <strong>{{ filteredRoutes.length }}</strong> matching routes
+      <span *ngIf="total > 0">out of <strong>{{ total }}</strong></span>
+    </span>
+    <span *ngIf="!loading && !loadedAll" class="loading-badge">⏳ Loading more...</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading && filteredRoutes.length === 0" class="loading">
+    Loading routes...
+  </div>
+
+  <!-- Virtual Scroll Table -->
+  <div *ngIf="!loading && filteredRoutes.length > 0" class="routes-table-container">
+    <cdk-virtual-scroll-viewport
+      [itemSize]="itemHeight"
+      class="viewport"
+      [minBufferPx]="itemHeight * 5"
+      [maxBufferPx]="itemHeight * 10">
+
+      <table class="routes-table">
+        <thead>
+          <tr>
+            <th>From</th>
+            <th>To</th>
+            <th>Airline</th>
+            <th>Stops</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *cdkVirtualFor="let route of filteredRoutes; let i = index">
+            <td>
+              <span class="airport-code">{{ route.source_airport }}</span>
+              <span class="airport-name">{{ route.source_name }}</span>
+            </td>
+            <td>
+              <span class="airport-code">{{ route.destination_airport }}</span>
+              <span class="airport-name">{{ route.destination_name }}</span>
+            </td>
+            <td>{{ route.airline || 'Unknown' }}</td>
+            <td>
+              <span class="stops-badge" [class.direct]="route.stops === 0" [class.one-stop]="route.stops === 1">
+                {{ route.stops === 0 ? 'Direct ✈️' : route.stops + ' stop' + (route.stops > 1 ? 's' : '') }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </cdk-virtual-scroll-viewport>
+  </div>
+
+  <!-- No Results -->
+  <div *ngIf="!loading && filteredRoutes.length === 0" class="no-results">
+    <h3>No routes found</h3>
+    <p>Try adjusting your search filters</p>
   </div>
 </div>
