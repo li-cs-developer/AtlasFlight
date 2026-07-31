@@ -3,53 +3,92 @@
   <p class="subtitle">Find flights between any two airports</p>
 
   <div class="search-box">
-    <div class="input-group">
+    <div class="airport-field">
       <label>From</label>
-      <select [(ngModel)]="fromAirport">
-        <option value="">Select departure airport</option>
-        <option *ngFor="let airport of airports" [value]="airport.code">
-          {{ airport.name }} ({{ airport.code }})
-        </option>
-      </select>
+      <input
+        type="text"
+        [matAutocomplete]="fromAuto"
+        [(ngModel)]="fromAirportInput"
+        (input)="onFromInput($any($event.target).value)"
+        placeholder="Type airport name or code..."
+        class="airport-input"
+      />
+      <mat-autocomplete
+        #fromAuto="matAutocomplete"
+        [displayWith]="displayAirport"
+        (optionSelected)="onFromOptionSelected($event.option.value)">
+        <mat-option
+          *ngFor="let airport of filteredFromAirports"
+          [value]="airport">
+          {{ airport.name }} ({{ airport.iata_code }})
+        </mat-option>
+      </mat-autocomplete>
     </div>
 
-    <div class="input-group">
+    <button class="swap-btn" (click)="swapAirports()">⇄</button>
+
+    <div class="airport-field">
       <label>To</label>
-      <select [(ngModel)]="toAirport">
-        <option value="">Select destination airport</option>
-        <option *ngFor="let airport of airports" [value]="airport.code">
-          {{ airport.name }} ({{ airport.code }})
-        </option>
-      </select>
+      <input
+        type="text"
+        [matAutocomplete]="toAuto"
+        [(ngModel)]="toAirportInput"
+        (input)="onToInput($any($event.target).value)"
+        placeholder="Type airport name or code..."
+        class="airport-input"
+      />
+      <mat-autocomplete
+        #toAuto="matAutocomplete"
+        [displayWith]="displayAirport"
+        (optionSelected)="onToOptionSelected($event.option.value)">
+        <mat-option
+          *ngFor="let airport of filteredToAirports"
+          [value]="airport">
+          {{ airport.name }} ({{ airport.iata_code }})
+        </mat-option>
+      </mat-autocomplete>
     </div>
 
-    <button (click)="findRoutes()" class="search-btn">🔍 Find Routes</button>
+    <button class="search-btn" (click)="findRoutes()" [disabled]="loading">
+      {{ loading ? 'Searching...' : '🔍 Find Routes' }}
+    </button>
   </div>
 
+  <!-- Results -->
   <div *ngIf="searched" class="results">
     <div class="results-header">
-      <h3>Results: {{ fromAirport }} → {{ toAirport }}</h3>
-      <span class="results-count">{{ results.length }} flights found</span>
+      <div>
+        <h3>Results: {{ fromAirportName || 'Unknown' }} → {{ toAirportName || 'Unknown' }}</h3>
+        <span class="results-count">{{ filteredResults.length }} flights found</span>
+      </div>
+      <div class="sort-container">
+        <label for="sortSelect">Sort by:</label>
+        <select id="sortSelect" [(ngModel)]="sortOption" (change)="onSortChange()" class="sort-select">
+          <option *ngFor="let option of sortOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
     </div>
 
-    <div class="route-card" *ngFor="let route of results; let i = index">
+    <div *ngIf="!loading && filteredResults.length === 0" class="no-results">
+      <h3>No routes found</h3>
+      <p>No direct or connecting routes available between these airports</p>
+    </div>
+
+    <div class="route-card" *ngFor="let route of filteredResults; let i = index">
       <div class="route-rank">#{{ i + 1 }}</div>
       <div class="route-info">
-        <div class="route-airline">{{ route.airline }}</div>
-        <div class="route-flight">{{ route.flightNumber }}</div>
+        <div class="route-airline">{{ route.airline || 'Unknown' }}</div>
+        <div class="route-flight">{{ route.flightNumber || 'N/A' }}</div>
         <div class="route-stops">
           <span class="stop-badge" [class]="getStopClass(route.stops)">
             {{ getStopText(route.stops) }}
           </span>
         </div>
-        <div class="route-duration">⏱️ {{ route.duration }}</div>
-        <div class="route-price">{{ route.price }}</div>
+        <div class="route-duration">⏱️ {{ route.duration || 'N/A' }}</div>
+        <div class="route-price">{{ route.price || 'N/A' }}</div>
       </div>
     </div>
-  </div>
-
-  <div *ngIf="searched && results.length === 0" class="no-results">
-    <h3>No routes found</h3>
-    <p>Please select both departure and destination airports</p>
   </div>
 </div>

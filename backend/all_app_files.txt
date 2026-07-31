@@ -1,0 +1,624 @@
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+
+from app.core.database import get_db
+
+router = APIRouter(redirect_slashes=False)
+
+
+@router.get("/")
+def get_airlines(
+    limit: int = Query(None, ge=1),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = text("""
+        SELECT 
+            airline_id,
+            name,
+            iata_code,
+            icao_code,
+            callsign,
+            country_name,
+            active
+        FROM Airline 
+        ORDER BY name
+    """)
+    
+    params = {}
+    
+    # Only add OFFSET/FETCH if limit is provided
+    if limit is not None:
+        query = text(str(query) + " OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY")
+        params["offset"] = offset
+        params["limit"] = limit
+    
+    result = db.execute(query, params)
+    rows = result.all()
+    
+    total = db.execute(text("SELECT COUNT(*) FROM Airline")).scalar()
+    
+    items = []
+    for row in rows:
+        items.append({
+            "airline_id": row[0],
+            "name": row[1],
+            "iata_code": row[2],
+            "icao_code": row[3],
+            "callsign": row[4],
+            "country_name": row[5],
+            "active": row[6]
+        })
+    
+    return {"total": total or 0, "items": items}
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session
+from sqlalchemy import select, func, text
+
+from app.core.database import get_db
+from app.models import Airport, City, Country
+
+router = APIRouter(redirect_slashes=False)
+
+
+@router.get("/")
+def get_airports(
+    search: str = Query(None),
+    country: str = Query(None),
+    limit: int = Query(None, ge=1),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    sql = """
+        SELECT 
+            a.airport_id,
+            a.name,
+            a.iata_code,
+            a.icao_code,
+            a.latitude,
+            a.longitude,
+            a.altitude,
+            a.time_zone,
+            c.name as city,
+            co.name as country
+        FROM Airport a
+        JOIN City c ON a.city_id = c.city_id
+        JOIN Country co ON c.country_iso_code = co.iso_code
+        WHERE 1=1
+    """
+    params = {}
+    
+    if search:
+        sql += " AND (a.name LIKE :search OR a.iata_code LIKE :search OR a.icao_code LIKE :search OR c.name LIKE :search)"
+        params["search"] = f"%{search}%"
+    
+    if country:
+        sql += " AND co.iso_code = :country"
+        params["country"] = country
+    
+    sql += " ORDER BY a.name"
+    
+    # Only add OFFSET/FETCH if limit is provided
+    if limit is not None:
+        sql += " OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY"
+        params["offset"] = offset
+        params["limit"] = limit
+    else:
+        # No limit - get all records
+        # For MSSQL, we need to use a very large number or remove pagination
+        # Option A: Use a very large limit
+        sql += " OFFSET :offset ROWS FETCH NEXT 100000 ROWS ONLY"
+        params["offset"] = offset
+    
+    result = db.execute(text(sql), params)
+    rows = result.all()
+    
+    # Count total
+    count_sql = """
+        SELECT COUNT(*) 
+        FROM Airport a
+        JOIN City c ON a.city_id = c.city_id
+        JOIN Country co ON c.country_iso_code = co.iso_code
+        WHERE 1=1
+    """
+    count_params = {}
+    if search:
+        count_sql += " AND (a.name LIKE :search OR a.iata_code LIKE :search OR a.icao_code LIKE :search OR c.name LIKE :search)"
+        count_params["search"] = f"%{search}%"
+    if country:
+        count_sql += " AND co.iso_code = :country"
+        count_params["country"] = country
+    
+    total = db.execute(text(count_sql), count_params).scalar()
+    
+    items = []
+    for row in rows:
+        items.append({
+            "airport_id": row[0],
+            "name": row[1],
+            "iata_code": row[2],
+            "icao_code": row[3],
+            "latitude": row[4],
+            "longitude": row[5],
+            "altitude": row[6],
+            "time_zone": row[7],
+            "city": row[8],
+            "country": row[9]
+        })
+    
+    return {"total": total or 0, "items": items}
+
+
+@router.get("/countries")
+def get_countries(db: Session = Depends(get_db)):
+    result = db.execute(select(Country.iso_code, Country.name).order_by(Country.name))
+    return [{"iso_code": row[0], "name": row[1]} for row in result.all()]
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+
+from app.core.database import get_db
+
+router = APIRouter(redirect_slashes=False)
+
+
+@router.get("/")
+def get_dashboard_stats(db: Session = Depends(get_db)):
+    total_airports = db.execute(text("SELECT COUNT(*) FROM Airport")).scalar()
+    total_airlines = db.execute(text("SELECT COUNT(*) FROM Airline")).scalar()
+    total_routes = db.execute(text("SELECT COUNT(*) FROM Route")).scalar()
+    total_countries = db.execute(text("SELECT COUNT(*) FROM Country")).scalar()
+    
+    return {
+        "total_airports": total_airports or 0,
+        "total_airlines": total_airlines or 0,
+        "total_routes": total_routes or 0,
+        "total_countries": total_countries or 0
+    }
+
+
+@router.get("/top-airlines")
+def get_top_airlines(db: Session = Depends(get_db)):
+    # Get top 5 airlines by number of routes
+    query = text("""
+        SELECT TOP 5
+            al.name,
+            COUNT(r.route_id) as route_count
+        FROM Airline al
+        INNER JOIN Route r ON al.airline_id = r.airline_id
+        WHERE al.name IS NOT NULL AND al.name != ''
+        GROUP BY al.airline_id, al.name
+        ORDER BY route_count DESC
+    """)
+    
+    result = db.execute(query)
+    rows = result.all()
+    
+    return [{"name": row[0], "value": row[1]} for row in rows]
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+
+from app.core.database import get_db
+
+router = APIRouter(redirect_slashes=False)
+
+
+@router.get("/")
+def get_fleet(db: Session = Depends(get_db)):
+    # Query with more metrics
+    query = text("""
+        SELECT 
+            at.icao_code,
+            at.name as aircraft_name,
+            COUNT(a.icao24) as total_aircraft,
+            COUNT(DISTINCT a.operatoricao) as operators,
+            COUNT(DISTINCT a.registration) as unique_registrations,
+            COUNT(DISTINCT a.typecode) as aircraft_variants,
+            SUM(CASE WHEN a.operatoricao IS NOT NULL THEN 1 ELSE 0 END) as active_aircraft
+        FROM AircraftType at
+        LEFT JOIN Aircraft a ON a.typecode = at.icao_code
+        GROUP BY at.icao_code, at.name
+        ORDER BY total_aircraft DESC
+    """)
+    
+    result = db.execute(query)
+    rows = result.all()
+    
+    items = []
+    for row in rows:
+        items.append({
+            "icao_code": row[0],
+            "name": row[1],
+            "count": row[2] or 0,
+            "operators": row[3] or 0,
+            "registrations": row[4] or 0,
+            "variants": row[5] or 0,
+            "active": row[6] or 0
+        })
+    
+    return {"items": items}
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+
+from app.core.database import get_db
+
+router = APIRouter(redirect_slashes=False)
+
+
+@router.get("/")
+def get_routes(
+    limit: int = Query(100000, ge=1),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = text("""
+        SELECT 
+            r.route_id,
+            r.stops,
+            src.name as source_name,
+            src.iata_code as source_iata,
+            dst.name as dest_name,
+            dst.iata_code as dest_iata,
+            al.name as airline_name
+        FROM Route r
+        JOIN Airport src ON r.source_airport_id = src.airport_id
+        JOIN Airport dst ON r.destination_airport_id = dst.airport_id
+        LEFT JOIN Airline al ON r.airline_id = al.airline_id
+        ORDER BY r.route_id
+        OFFSET :offset ROWS
+        FETCH NEXT :limit ROWS ONLY
+    """)
+    
+    result = db.execute(query, {"offset": offset, "limit": limit})
+    rows = result.all()
+    
+    total = db.execute(text("SELECT COUNT(*) FROM Route")).scalar()
+    
+    items = []
+    for row in rows:
+        items.append({
+            "route_id": row[0],
+            "stops": row[1],
+            "source_name": row[2],
+            "source_airport": row[3],
+            "destination_name": row[4],
+            "destination_airport": row[5],
+            "airline": row[6]
+        })
+    
+    return {"total": total or 0, "items": items}
+
+
+# NEW: Route Finder endpoint
+@router.get("/find")
+def find_routes(
+    from_airport: str = Query(..., alias="from"),
+    to_airport: str = Query(..., alias="to"),
+    db: Session = Depends(get_db)
+):
+    query = text("""
+        SELECT 
+            r.route_id,
+            r.stops,
+            src.name as source_name,
+            src.iata_code as source_iata,
+            dst.name as dest_name,
+            dst.iata_code as dest_iata,
+            al.name as airline_name
+        FROM Route r
+        JOIN Airport src ON r.source_airport_id = src.airport_id
+        JOIN Airport dst ON r.destination_airport_id = dst.airport_id
+        LEFT JOIN Airline al ON r.airline_id = al.airline_id
+        WHERE src.iata_code = :from_airport AND dst.iata_code = :to_airport
+        ORDER BY r.stops
+    """)
+    
+    result = db.execute(query, {"from_airport": from_airport, "to_airport": to_airport})
+    rows = result.all()
+    
+    items = []
+    for row in rows:
+        items.append({
+            "route_id": row[0],
+            "stops": row[1],
+            "source_name": row[2],
+            "source_airport": row[3],
+            "destination_name": row[4],
+            "destination_airport": row[5],
+            "airline": row[6]
+        })
+    
+    return items
+
+@router.get("/find")
+def find_routes(
+    from_airport: str = Query(..., alias="from"),
+    to_airport: str = Query(..., alias="to"),
+    db: Session = Depends(get_db)
+):
+    query = text("""
+        SELECT 
+            r.route_id,
+            r.stops,
+            src.name as source_name,
+            src.iata_code as source_iata,
+            dst.name as dest_name,
+            dst.iata_code as dest_iata,
+            al.name as airline_name,
+            al.iata_code as airline_iata
+        FROM Route r
+        JOIN Airport src ON r.source_airport_id = src.airport_id
+        JOIN Airport dst ON r.destination_airport_id = dst.airport_id
+        LEFT JOIN Airline al ON r.airline_id = al.airline_id
+        WHERE src.iata_code = :from_airport AND dst.iata_code = :to_airport
+        ORDER BY r.stops
+    """)
+    
+    result = db.execute(query, {"from_airport": from_airport, "to_airport": to_airport})
+    rows = result.all()
+    
+    items = []
+    for row in rows:
+        items.append({
+            "route_id": row[0],
+            "stops": row[1],
+            "source_name": row[2],
+            "source_airport": row[3],
+            "destination_name": row[4],
+            "destination_airport": row[5],
+            "airline": row[6] or "Unknown",
+            "airline_iata": row[7]
+        })
+    
+    return items
+from pydantic_settings import BaseSettings
+from typing import List
+
+
+class Settings(BaseSettings):
+    # Database - using the exact working string
+    DATABASE_URL: str = "mssql+pyodbc://@localhost\\SQLEXPRESS/AtlasFlight?driver=ODBC+Driver+17+for+SQL+Server&trusted_connection=yes"
+    
+    # API
+    ALLOWED_ORIGINS: str = "http://localhost:4200,https://*.vercel.app"
+    
+    @property
+    def ALLOWED_ORIGINS_LIST(self) -> List[str]:
+        return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
+    
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        extra = "ignore"  # This allows extra fields without error
+
+
+settings = Settings()
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+from app.core.config import settings
+
+# Synchronous engine (no async)
+engine = create_engine(
+    settings.DATABASE_URL,
+    echo=True,
+    pool_pre_ping=True,
+)
+
+SessionLocal = sessionmaker(
+    engine,
+    autocommit=False,
+    autoflush=False,
+)
+
+Base = declarative_base()
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+from app.core.database import Base
+from app.models.airport import Airport
+from app.models.airline import Airline
+from app.models.route import Route
+from app.models.country import Country
+from app.models.city import City
+from app.models.aircraft import Aircraft, AircraftType
+
+__all__ = [
+    "Base",
+    "Airport",
+    "Airline",
+    "Route",
+    "Country",
+    "City",
+    "Aircraft",
+    "AircraftType"
+]
+from sqlalchemy import Column, String, ForeignKey
+from app.core.database import Base
+
+
+class AircraftType(Base):
+    __tablename__ = "AircraftType"
+    
+    icao_code = Column(String(10), primary_key=True)
+    iata_code = Column(String(10))
+    name = Column(String(255))
+
+
+class Aircraft(Base):
+    __tablename__ = "Aircraft"
+    
+    icao24 = Column(String(10), primary_key=True)
+    registration = Column(String(20))
+    serialnumber = Column(String(50))
+    typecode = Column(String(10), ForeignKey("AircraftType.icao_code"))
+    operatoricao = Column(String(10), ForeignKey("Airline.icao_code"))
+from sqlalchemy import Column, Integer, String, ForeignKey, CheckConstraint
+from app.core.database import Base
+
+
+class Airline(Base):
+    __tablename__ = "Airline"
+    
+    airline_id = Column(Integer, primary_key=True)
+    name = Column(String(255), nullable=False)
+    iata_code = Column(String(3))
+    icao_code = Column(String(4), unique=True)
+    alias = Column(String(255))
+    callsign = Column(String(255))
+    active = Column(String(1), CheckConstraint("active IN ('Y','N') OR active IS NULL"))
+    country_name = Column(String(255))
+    country_iso_code = Column(String(3), ForeignKey("Country.iso_code"))
+from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from app.core.database import Base
+
+
+class Airport(Base):
+    __tablename__ = "Airport"
+    
+    airport_id = Column(Integer, primary_key=True)
+    name = Column(String(255), nullable=False)
+    iata_code = Column(String(3))
+    icao_code = Column(String(4))
+    longitude = Column(Float)
+    altitude = Column(Integer)
+    latitude = Column(Float)
+    time_zone = Column(String(50))
+    city_id = Column(Integer, ForeignKey("City.city_id"))
+from sqlalchemy import Column, Integer, String, ForeignKey
+from app.core.database import Base
+
+
+class City(Base):
+    __tablename__ = "City"
+    
+    city_id = Column(Integer, primary_key=True)
+    name = Column(String(255), nullable=False)
+    country_iso_code = Column(String(3), ForeignKey("Country.iso_code"))
+from sqlalchemy import Column, String
+from app.core.database import Base
+
+
+class Country(Base):
+    __tablename__ = "Country"
+    
+    iso_code = Column(String(3), primary_key=True)
+    name = Column(String(255), nullable=False)
+    dafif_code = Column(String(4))
+from sqlalchemy import Column, Integer, ForeignKey
+from app.core.database import Base
+
+
+class Route(Base):
+    __tablename__ = "Route"
+    
+    route_id = Column(Integer, primary_key=True)
+    stops = Column(Integer, nullable=False, default=0)
+    source_airport_id = Column(Integer, ForeignKey("Airport.airport_id"), nullable=False)
+    destination_airport_id = Column(Integer, ForeignKey("Airport.airport_id"), nullable=False)
+    airline_id = Column(Integer, ForeignKey("Airline.airline_id"))
+from pydantic import BaseModel
+from typing import Optional
+
+
+class AirportBase(BaseModel):
+    airport_id: int
+    name: str
+    iata_code: Optional[str] = None
+    icao_code: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    altitude: Optional[int] = None
+    time_zone: Optional[str] = None
+
+
+class AirportDetail(AirportBase):
+    city: str
+    country: str
+
+
+class AirportListResponse(BaseModel):
+    total: int
+    items: list[AirportDetail]
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
+
+from app.core.config import settings
+from app.core.database import engine, Base
+from app.api import airports, airlines, routes, fleet, dashboard
+
+# Create tables on startup
+print("Creating tables...")
+Base.metadata.create_all(bind=engine)
+print("Tables created (or already exist)!")
+
+app = FastAPI(
+    title="AtlasFlight API",
+    description="Aviation analytics API with SQL Server",
+    version="1.0.0"
+)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:4200", "http://127.0.0.1:4200", "https://*.vercel.app"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers - ONLY HERE, not in individual router files
+app.include_router(airports.router, prefix="/api/airports", tags=["Airports"])
+app.include_router(airlines.router, prefix="/api/airlines", tags=["Airlines"])
+app.include_router(routes.router, prefix="/api/routes", tags=["Routes"])
+app.include_router(fleet.router, prefix="/api/fleet", tags=["Fleet"])
+app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
+
+
+@app.get("/")
+async def root():
+    return {
+        "message": "Welcome to AtlasFlight API (SQL Server Connected!)",
+        "docs": "/docs",
+        "version": "1.0.0"
+    }
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True
+    )
+
+
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-dotenv==1.0.1
+
+# Database
+sqlalchemy==2.0.36
+pyodbc==5.2.0
+aioodbc==0.5.0
+alembic==1.14.1
+
+# Data validation
+pydantic==2.10.4
+pydantic-settings==2.6.1
+
+# CORS & Utilities
+python-multipart==0.0.20
+httpx==0.28.1
+
+# Development
+pytest==8.3.4
+pytest-asyncio==0.24.0

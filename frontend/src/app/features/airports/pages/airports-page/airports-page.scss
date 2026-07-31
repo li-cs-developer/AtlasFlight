@@ -95,6 +95,26 @@ h2 {
   font-size: 0.95rem;
 }
 
+.results-count strong {
+  color: #1a1a1a;
+}
+
+.loading-badge {
+  display: inline-block;
+  background: #fff3e0;
+  color: #e65100;
+  padding: 2px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  margin-left: 12px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 .loading {
   text-align: center;
   padding: 60px 0;
@@ -102,10 +122,20 @@ h2 {
   font-size: 1.2rem;
 }
 
-.airports-grid {
+/* Virtual Scroll Viewport - NO WRAPPER */
+.viewport {
+  height: 650px;
+  width: 100%;
+}
+
+/* Each row contains 3 cards in a grid */
+.airports-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
+  padding: 4px 0;
+  box-sizing: border-box;
+  height: 210px; /* Fixed height for each row */
 }
 
 .airport-card {
@@ -114,6 +144,9 @@ h2 {
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   transition: transform 0.2s, box-shadow 0.2s;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .airport-card:hover {
@@ -168,6 +201,13 @@ h2 {
   color: #333;
 }
 
+/* Responsive */
+@media (max-width: 992px) {
+  .airports-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   .filters {
     flex-direction: column;
@@ -177,8 +217,13 @@ h2 {
     min-width: auto;
   }
 
-  .airports-grid {
+  .airports-row {
     grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .viewport {
+    height: 500px;
   }
 
   .filter-group {

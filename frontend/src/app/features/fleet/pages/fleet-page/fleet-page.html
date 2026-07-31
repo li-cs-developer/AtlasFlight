@@ -2,31 +2,83 @@
   <h2>🛩️ Fleet Analytics</h2>
   <p class="subtitle">Aircraft types and fleet statistics</p>
 
+  <!-- Stats Summary -->
   <div class="stats-summary">
     <div class="stat-item">
-      <div class="stat-number">{{ aircraftTypes.length }}</div>
+      <div class="stat-number">{{ filteredAircraft.length }}</div>
       <div class="stat-label">Aircraft Types</div>
     </div>
     <div class="stat-item">
-      <div class="stat-number">{{ getTotalAircraft() }}</div>
+      <div class="stat-number">{{ getTotalAircraft() | number }}</div>
       <div class="stat-label">Total Aircraft</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">{{ getTotalOperators() | number }}</div>
+      <div class="stat-label">Total Operators</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">{{ getTotalRegistrations() | number }}</div>
+      <div class="stat-label">Registrations</div>
     </div>
   </div>
 
-  <div class="fleet-grid">
-    <div class="fleet-card" *ngFor="let type of aircraftTypes">
+  <!-- Search + Sort on Same Line -->
+  <div class="filters-row">
+    <div class="search-box">
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        (input)="applyFilters()"
+        placeholder="Search by aircraft name or ICAO code..."
+        class="search-input"
+      />
+      <span class="search-icon">🔍</span>
+      <button *ngIf="searchQuery" (click)="clearFilters()" class="clear-search-btn">✕</button>
+    </div>
+
+    <div class="sort-container">
+      <select [(ngModel)]="sortOption" (change)="applyFilters()" class="sort-select">
+        <option *ngFor="let option of sortOptions" [value]="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Results Count -->
+  <div class="results-count" *ngIf="!loading || filteredAircraft.length > 0">
+    Showing <strong>{{ filteredAircraft.length }}</strong> aircraft types
+    <span *ngIf="aircraftTypes.length > 0">out of <strong>{{ aircraftTypes.length }}</strong></span>
+    <span *ngIf="isProgressiveLoading" class="loading-badge">⏳ Loading more...</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading && filteredAircraft.length === 0" class="loading">
+    Loading fleet data...
+  </div>
+
+  <!-- Fleet Grid -->
+  <div class="fleet-grid" *ngIf="!loading || filteredAircraft.length > 0">
+    <div class="fleet-card" *ngFor="let type of filteredAircraft">
       <div class="fleet-header">
         <h3>{{ type.name }}</h3>
-        <span class="icao-badge">{{ type.icao }}</span>
+        <span class="icao-badge">{{ type.icao_code }}</span>
       </div>
       <div class="fleet-details">
-        <p><strong>✈️ Total:</strong> {{ type.count | number }}</p>
-        <p><strong>🏢 Airlines:</strong> {{ type.airlines }}</p>
-        <p><strong>📏 Range:</strong> {{ type.range }}</p>
+        <p><strong>✈️ Total Aircraft:</strong> {{ type.count | number }}</p>
+        <p><strong>🏢 Operators:</strong> {{ type.operators || 'N/A' }}</p>
+        <p><strong>📋 Registrations:</strong> {{ type.registrations || 'N/A' }}</p>
+        <p><strong>✅ Active Aircraft:</strong> {{ type.active || 'N/A' }}</p>
       </div>
       <div class="fleet-bar">
         <div class="bar-fill" [style.width.%]="getPercentage(type.count)"></div>
       </div>
     </div>
+  </div>
+
+  <!-- No Results -->
+  <div *ngIf="!loading && filteredAircraft.length === 0" class="no-results">
+    <h3>No aircraft types found</h3>
+    <p>Try adjusting your search</p>
   </div>
 </div>

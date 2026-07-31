@@ -259,6 +259,49 @@ h2 {
   }
 }
 
+.no-data {
+  text-align: center;
+  padding: 40px 0;
+  color: #999;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+.legend-value {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 0.85rem;
+  margin-left: auto;
+}
+
+.legend-count {
+  color: #999;
+  font-size: 0.7rem;
+  margin-left: 2px;
+}
+
+// Update legend-item flex
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #333;
+  width: 100%;
+}
+
+.legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.legend-label {
+  font-weight: 500;
+  flex: 1;
+}
+
 @media (max-width: 768px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
