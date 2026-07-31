@@ -13,7 +13,6 @@ ENV/
 .vscode/
 
 # Database
-*.db
 *.sqlite
 *.sqlite3
 *.mdf
