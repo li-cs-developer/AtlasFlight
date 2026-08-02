@@ -13,14 +13,15 @@ print("Tables created (or already exist)!")
 
 app = FastAPI(
     title="AtlasFlight API",
-    description="Aviation analytics API with SQL Server",
+    description="Aviation analytics API with Azure SQL Server",
     version="1.0.0"
 )
 
-# CORS middleware - make sure this is before any routes
+# Dynamic origins from config + allow wildcards for Azure deployment testing
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200", "http://127.0.0.1:4200"],
+    allow_origins=settings.ALLOWED_ORIGINS_LIST or ["*"],
+    allow_origin_regex=r"https://.*\.azurestaticapps\.net",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
