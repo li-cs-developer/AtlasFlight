@@ -39,6 +39,12 @@ testem.log
 /typings
 __screenshots__/
 
+# Test & Report folders (add these)
+/test-results/
+/playwright-report/
+/test-results/**
+/playwright-report/**
+
 # System files
 .DS_Store
 Thumbs.db

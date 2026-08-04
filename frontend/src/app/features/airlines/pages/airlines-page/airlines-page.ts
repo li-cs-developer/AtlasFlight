@@ -108,7 +108,6 @@ export class AirlinesPage implements OnInit {
       results = results.filter(airline => {
         return (
           airline.name?.toLowerCase().includes(query) ||
-          airline.iata_code?.toLowerCase().includes(query) ||
           airline.icao_code?.toLowerCase().includes(query)
         );
       });

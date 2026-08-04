@@ -112,7 +112,6 @@ export class AirportsPage implements OnInit {
       results = results.filter(airport => {
         return (
           airport.name?.toLowerCase().includes(query) ||
-          airport.iata_code?.toLowerCase().includes(query) ||
           airport.icao_code?.toLowerCase().includes(query) ||
           airport.city?.toLowerCase().includes(query)
         );

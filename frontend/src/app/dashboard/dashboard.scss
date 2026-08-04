@@ -24,11 +24,18 @@ h2 {
 
 .stat-card {
   background: white;
-  padding: 24px;
+  padding: 20px;
   border-radius: 12px;
   text-align: center;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  transition: transform 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-height: 140px;
 }
 
 .stat-card:hover {
@@ -40,11 +47,11 @@ h2 {
   font-size: 2.5rem;
   font-weight: 700;
   color: #1976d2;
+  line-height: 1.2;
 }
 
 .stat-label {
   color: #666;
-  margin-top: 8px;
   font-size: 0.9rem;
   font-weight: 500;
 }
