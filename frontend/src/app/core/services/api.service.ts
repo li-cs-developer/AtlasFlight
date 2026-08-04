@@ -1,19 +1,23 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-  private apiUrl = 'http://localhost:8000/api';
+  private apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 
   // Dashboard
   getDashboardStats(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/dashboard/`);  
+    return this.http.get(`${this.apiUrl}/dashboard/`);   
+  }
+
+  getTopAirlines(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/dashboard/top-airlines`);
   }
 
   // Airports
@@ -50,9 +54,5 @@ export class ApiService {
       .set('from', from)
       .set('to', to);
     return this.http.get<any[]>(`${this.apiUrl}/routes/find`, { params });
-  }
-
-  getTopAirlines(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/dashboard/top-airlines`);
   }
 }

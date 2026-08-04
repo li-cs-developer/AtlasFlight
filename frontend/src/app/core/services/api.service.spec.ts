@@ -1,10 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { ApiService } from './api.service';
+import { environment } from '../../../environments/environment';
 
 describe('ApiService', () => {
   let service: ApiService;
   let httpMock: HttpTestingController;
+  const baseUrl = environment.apiUrl;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -35,8 +37,7 @@ describe('ApiService', () => {
       expect(data).toEqual(mockStats);
     });
 
-    // FIX: Add trailing slash to match the actual request
-    const req = httpMock.expectOne('http://localhost:8000/api/dashboard/');
+    const req = httpMock.expectOne(`${baseUrl}/dashboard/`);
     expect(req.request.method).toBe('GET');
     req.flush(mockStats);
   });
@@ -49,9 +50,8 @@ describe('ApiService', () => {
       expect(data).toEqual(mockAirports);
     });
 
-    // FIX: Add trailing slash and include query params in the matcher
     const req = httpMock.expectOne(
-      (req) => req.url === 'http://localhost:8000/api/airports/' &&
+      (req) => req.url === `${baseUrl}/airports/` &&
                req.params.get('search') === 'ATL' &&
                req.params.get('country') === 'US'
     );
@@ -66,7 +66,7 @@ describe('ApiService', () => {
       expect(data).toEqual(mockCountries);
     });
 
-    const req = httpMock.expectOne('http://localhost:8000/api/airports/countries');
+    const req = httpMock.expectOne(`${baseUrl}/airports/countries`);
     expect(req.request.method).toBe('GET');
     req.flush(mockCountries);
   });
@@ -81,7 +81,7 @@ describe('ApiService', () => {
       expect(data).toEqual(mockTopAirlines);
     });
 
-    const req = httpMock.expectOne('http://localhost:8000/api/dashboard/top-airlines');
+    const req = httpMock.expectOne(`${baseUrl}/dashboard/top-airlines`);
     expect(req.request.method).toBe('GET');
     req.flush(mockTopAirlines);
   });
@@ -93,8 +93,7 @@ describe('ApiService', () => {
       expect(data).toEqual(mockFleet);
     });
 
-    // FIX: Add trailing slash
-    const req = httpMock.expectOne('http://localhost:8000/api/fleet/');
+    const req = httpMock.expectOne(`${baseUrl}/fleet/`);
     expect(req.request.method).toBe('GET');
     req.flush(mockFleet);
   });
@@ -106,9 +105,8 @@ describe('ApiService', () => {
       expect(data).toEqual(mockRoutes);
     });
 
-    // FIX: Add trailing slash and check query params
     const req = httpMock.expectOne(
-      (req) => req.url === 'http://localhost:8000/api/routes/' &&
+      (req) => req.url === `${baseUrl}/routes/` &&
                req.params.get('limit') === '10'
     );
     expect(req.request.method).toBe('GET');
