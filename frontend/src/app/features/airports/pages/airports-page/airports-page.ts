@@ -14,7 +14,7 @@ import { ApiService } from '../../../../core/services/api.service';
 export class AirportsPage implements OnInit {
   allAirports: any[] = [];
   filteredAirports: any[] = [];
-  airportsRows: any[][] = []; // NEW: Chunked rows for virtual scroll
+  airportsRows: any[][] = [];
   searchQuery: string = '';
   selectedCountry: string = '';
   countries: any[] = [];
@@ -23,8 +23,7 @@ export class AirportsPage implements OnInit {
   loadedAll: boolean = false;
   searchPerformed: boolean = false;
 
-  // Virtual scroll settings
-  itemHeight: number = 220; // Height of each row in pixels
+  itemHeight: number = 220;
 
   constructor(private apiService: ApiService) {}
 
@@ -33,7 +32,6 @@ export class AirportsPage implements OnInit {
     this.loadCountries();
   }
 
-  // Helper function to chunk array into rows of 3
   chunkArray(array: any[], chunkSize: number = 3): any[][] {
     const result = [];
     for (let i = 0; i < array.length; i += chunkSize) {
@@ -53,7 +51,7 @@ export class AirportsPage implements OnInit {
       next: (firstBatch) => {
         this.allAirports = firstBatch.items;
         this.filteredAirports = firstBatch.items;
-        this.airportsRows = this.chunkArray(this.filteredAirports, 3); // Chunk the data
+        this.airportsRows = this.chunkArray(this.filteredAirports, 3);
         this.total = typeof firstBatch.total === 'number' ? firstBatch.total : 0;
         this.loading = false;
         console.log(`Loaded ${this.allAirports.length} airports (first batch)`);
@@ -100,6 +98,11 @@ export class AirportsPage implements OnInit {
     });
   }
 
+  getCountryName(isoCode: string): string {
+    const country = this.countries.find(c => c.iso_code === isoCode);
+    return country ? country.name : isoCode;
+  }
+
   filterAirports() {
     this.searchPerformed = true;
     let results = this.allAirports;
@@ -117,11 +120,14 @@ export class AirportsPage implements OnInit {
     }
 
     if (this.selectedCountry) {
-      results = results.filter(airport => airport.country_iso === this.selectedCountry);
+      const selectedCountryName = this.getCountryName(this.selectedCountry);
+      results = results.filter(airport =>
+        airport.country === selectedCountryName
+      );
     }
 
     this.filteredAirports = results;
-    this.airportsRows = this.chunkArray(this.filteredAirports, 3); // Re-chunk after filtering
+    this.airportsRows = this.chunkArray(this.filteredAirports, 3);
   }
 
   clearFilters() {
