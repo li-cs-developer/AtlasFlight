@@ -63,10 +63,7 @@ export class FleetPage implements OnInit {
     if (this.searchQuery.trim()) {
       const query = this.searchQuery.toLowerCase().trim();
       results = results.filter(aircraft => {
-        return (
-          aircraft.name?.toLowerCase().includes(query) ||
-          aircraft.icao_code?.toLowerCase().includes(query)
-        );
+        return aircraft.name?.toLowerCase().includes(query);
       });
     }
 
