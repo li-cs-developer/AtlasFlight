@@ -1,7 +1,9 @@
 # ✈️ AtlasFlight
 
 **A full-stack aviation analytics dashboard built with Angular 21, FastAPI, and SQL Server.**  
-📌 Version 2.0 – Now with Full Backend & Database | [View v1.0.0 (Frontend UI & Dashboard Prototype](https://github.com/li-cs-developer/AtlasFlight/tree/v1.0.0)
+ Version 2.0 – Now with Full Backend & Database | [View v1.0.0 (Frontend UI & Dashboard Prototype](https://github.com/li-cs-developer/AtlasFlight/tree/v1.0.0)
+
+🌐 **Live Demo:** [AtlasFlight on Azure](https://gray-plant-0a6a46c0f.7.azurestaticapps.net)
 
 **AtlasFlight** started as a frontend-only prototype ([v1.0.0](https://github.com/li-cs-developer/AtlasFlight/tree/v1.0.0)) and has evolved into a complete full-stack application (v2.0). This repository contains the latest version with a Python FastAPI backend, SQL Server database, and a fully interactive Angular frontend.
 
@@ -17,6 +19,7 @@
 | **Search** | Client-side only | Server-side filtering with country/name search |
 | **Route Finder** | Mock results | Real route data from database |
 | **Testing** | ❌ None | ✅ Jest (frontend) + pytest (backend) |
+| **Deployment** | Vercel (Frontend only) |  Azure Cloud (Static Web Apps + App Service + SQL) |
 
 ---
 
@@ -407,6 +410,73 @@ With both servers running:
 
 ---
 
+## ☁️ DevOps & Cloud Infrastructure
+This project is deployed on Microsoft Azure using a modern cloud-native architecture with fully automated CI/CD pipelines.
+
+### Azure Services Used
+
+| Service | Purpose |
+|---------|----------|
+| **Azure Static Web Apps** | Hosts the Angular frontend with automatic CI/CD from GitHub |
+| **Azure App Service** | Hosts the FastAPI backend with Python runtime |
+| **Azure SQL** | Hosts the SQL Server database with high availability |
+| **GitHub Actions** | CI/CD pipeline for automated builds and deployments |
+
+### CI/CD Pipeline Architecture
+The project uses dual GitHub Actions workflows for automated deployment:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    GitHub Repository                        │
+│                   (Source Control)                          │
+└─────────────────────┬───────────────────────────────────────┘
+                      │  Push to main
+                      ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    GitHub Actions                           │
+│                   (CI/CD Pipeline)                          │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │  Workflow 1: Frontend (Azure Static Web Apps)       │    │
+│  │  - Build Angular app                                │    │
+│  │  - Deploy to Azure Static Web Apps                  │    │
+│  │  - Preview deployments for PRs                      │    │
+│  └─────────────────────────────────────────────────────┘    │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │  Workflow 2: Backend (Azure App Service)            │    │
+│  │  - Build Python environment                         │    │
+│  │  - Deploy to Azure App Service                      │    │
+│  │  - Run Gunicorn with Uvicorn workers                │    │
+│  └─────────────────────────────────────────────────────┘    │
+└───────────────────────────┬─────────────────────────────────┘
+                            │
+                ┌───────────┴───────────┐
+                ▼                       ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Azure Cloud                              │
+│  ┌─────────────────────┐  ┌─────────────────────────────┐   │
+│  │  Static Web Apps    │  │  App Service (Python)       │   │
+│  │  (Angular Frontend) │<-│  (FastAPI Backend)          │   │
+│  └─────────────────────┘  └─────────────────────────────┘   │
+│                                    │                        │
+│                                    ▼                        │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │  Azure SQL Database (SQL Server)                    │    │
+│  └─────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+
+
+
+
+
+
+
+
+
+
+
+---
 ## 🧪 Testing
 
 ### Frontend Tests (Jest)
